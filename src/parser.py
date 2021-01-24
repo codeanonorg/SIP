@@ -29,9 +29,6 @@ def tokenizer(input: str) -> list:
     return tokens
 
 
-print(tokenizer("(a n(cd)(d e))"))
-
-
 def accept(tok: str, input: list):
     return (len(input) > 0 and input[0] == tok)
 
@@ -57,7 +54,7 @@ def parse_sexpr(level, input: list):
         if accept(')', next):
             return (content, next[1:])
         else:
-            print("Closing parens expected !")
+            print("Closing parenthesis expected !")
             return (None, input)
 
     if accept(')', input):
@@ -67,18 +64,6 @@ def parse_sexpr(level, input: list):
         return (int(input[0]), input[1:])
 
     return (input[0], input[1:])
-
-
-print(parse_sexpr(0, tokenizer("(a (b))")))
-
-
-prog = "( \
-    (affect a 1) \
-    (affect b 10) \
-    (while (< a b) \
-      (affect a (+ a 1)) \
-    ) \
-)"
 
 
 def eval_arith(arith, env):
@@ -92,13 +77,18 @@ def eval_arith(arith, env):
             for v in arith[1:]:
                 s += eval_arith(v, env)
             return s
+        if arith[0] == '*':
+            s = 1
+            for v in arith[1:]:
+                s *= eval_arith(v, env)
+            return s
     if type(arith) == str:
         if arith in env:
             return env[arith[0]]
         else:
             print(f"Undeclared variable {arith[0]}!")
             quit()
-    print(f"Invalid arith expr {arith}")
+    print(f"Invalid arithmetic expression {arith}")
     quit()
 
 
@@ -115,7 +105,20 @@ def eval(prog, env):
                 eval(s[2:], env)
 
 
-ast = parse_sexpr(0, tokenizer(prog))[0]
-env = {"a": 0, "b": 0}
-eval(ast, env)
+prog = """
+(
+    (affect a  1)
+    (affect b 10)
+    (affect sum (* 9 (+ 1 1)))
+    (while (< a b)
+        (affect a (+ a 1)) 
+    )
+)"""
+
+parsed, _ = parse_sexpr(0, tokenizer(prog))
+env = {}
+eval(
+    parsed,
+    env
+)
 print(env)
